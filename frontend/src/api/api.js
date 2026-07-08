@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = '/api';
+const API_BASE = 'https://category-expense-tracker.onrender.com/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE,

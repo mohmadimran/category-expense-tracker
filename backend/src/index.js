@@ -22,15 +22,24 @@ app.use(express.json());
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/categories', categoryRoutes);
 
-// Summary endpoint - Using MongoDB Aggregation Pipeline
 app.get('/api/summary', async (req, res) => {
   try {
+    console.log('📊 Summary request received with query:', req.query);
+    
     const { month, year } = req.query;
     
+    // Build match stage for date filtering
     let matchStage = {};
     if (month && year) {
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0, 23, 59, 59);
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+      
+      // Create date range for the specified month
+      const startDate = new Date(yearNum, monthNum - 1, 1);
+      const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59);
+      
+      console.log(`📅 Date range: ${startDate} to ${endDate}`);
+      
       matchStage = {
         date: {
           $gte: startDate,
@@ -39,11 +48,21 @@ app.get('/api/summary', async (req, res) => {
       };
     }
 
+    // Get all categories first
+    const allCategories = await Category.find().lean();
+    console.log(`📂 Found ${allCategories.length} categories`);
+
+    // If no categories exist, return empty array
+    if (allCategories.length === 0) {
+      return res.json([]);
+    }
+
+    // Get expenses with aggregation
     const summary = await Expense.aggregate([
       // Match expenses in the date range
       { $match: matchStage },
       
-      // Group by category and calculate total spent
+      // Lookup category details
       {
         $lookup: {
           from: 'categories',
@@ -52,8 +71,11 @@ app.get('/api/summary', async (req, res) => {
           as: 'categoryInfo'
         }
       },
+      
+      // Unwind category info (preserve expenses without category)
       { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
       
+      // Group by category
       {
         $group: {
           _id: '$category',
@@ -79,19 +101,51 @@ app.get('/api/summary', async (req, res) => {
       { $sort: { category_name: 1 } }
     ]);
 
-    // Format response
-    const formattedSummary = summary.map(item => ({
-      category_id: item._id,
-      category_name: item.category_name || 'Uncategorized',
-      monthly_budget: item.monthly_budget,
-      total_spent: item.total_spent || 0,
-      is_over_budget: item.is_over_budget || false
-    }));
+    console.log(`📊 Found ${summary.length} categories with expenses`);
+
+    // Format response - include all categories even if they have no expenses
+    const formattedSummary = allCategories.map(category => {
+      const expenseData = summary.find(item => 
+        item._id && item._id.toString() === category._id.toString()
+      );
+      
+      return {
+        category_id: category._id,
+        category_name: category.name,
+        monthly_budget: category.monthly_budget || null,
+        total_spent: expenseData ? expenseData.total_spent : 0,
+        is_over_budget: expenseData ? expenseData.is_over_budget : false
+      };
+    });
 
     res.json(formattedSummary);
+    
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('❌ Summary error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate summary',
+      details: error.message 
+    });
   }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const statusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({
+    status: 'OK',
+    server: 'running',
+    mongodb: statusMap[dbStatus] || 'unknown',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Error handling middleware
