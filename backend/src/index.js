@@ -24,7 +24,6 @@ app.use('/api/categories', categoryRoutes);
 
 app.get('/api/summary', async (req, res) => {
   try {
-    console.log('📊 Summary request received with query:', req.query);
     
     const { month, year } = req.query;
     
