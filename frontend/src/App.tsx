@@ -5,6 +5,7 @@ import CategoryManager from './components/CategoryManager';
 import SummaryView from './components/SummaryView';
 import { useExpenses } from './hooks/useExpenses';
 import { useCategories } from './hooks/useCategories';
+import './App.css';
 type Tab = 'expenses' | 'categories' | 'summary';
 
 function App() {
@@ -87,15 +88,8 @@ function App() {
   };
 
   return (
-    <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      background: '#f4f6f8',
-      minHeight: '100vh'
-    }}>
-      <header style={{
+    <div className="app-shell">
+      <header className="app-header" style={{
         textAlign: 'center',
         padding: '20px 0',
         borderBottom: '2px solid #e9ecef',
@@ -109,7 +103,7 @@ function App() {
         </p>
       </header>
 
-      <nav style={{
+      <nav className="app-nav" style={{
         display: 'flex',
         gap: '10px',
         marginBottom: '30px',
@@ -117,6 +111,7 @@ function App() {
         paddingBottom: 0
       }}>
         <button
+          className="app-nav-button"
           style={{
             padding: '10px 24px',
             background: 'transparent',
@@ -133,6 +128,7 @@ function App() {
           📋 Expenses
         </button>
         <button
+          className="app-nav-button"
           style={{
             padding: '10px 24px',
             background: 'transparent',
@@ -149,6 +145,7 @@ function App() {
           🏷️ Categories
         </button>
         <button
+          className="app-nav-button"
           style={{
             padding: '10px 24px',
             background: 'transparent',
@@ -166,7 +163,7 @@ function App() {
         </button>
       </nav>
 
-      <main style={{
+      <main className="app-main" style={{
         background: 'white',
         borderRadius: '8px',
         padding: '24px',
@@ -176,7 +173,7 @@ function App() {
         {renderTabContent()}
       </main>
 
-      <footer style={{
+      <footer className="app-footer" style={{
         textAlign: 'center',
         padding: '20px 0',
         marginTop: '30px',

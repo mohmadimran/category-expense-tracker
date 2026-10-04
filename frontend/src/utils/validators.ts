@@ -7,7 +7,8 @@ type CategoryFormData = Omit<CategoryInput, 'monthly_budget'> & { monthly_budget
 export const validateExpense = (data: ExpenseFormData): ValidationErrors => {
   const errors: ValidationErrors = {};
   
-  if (!data.amount || Number(data.amount) <= 0) {
+  const amount = Number(data.amount);
+  if (!data.amount || !Number.isFinite(amount) || amount <= 0) {
     errors.amount = 'Amount must be greater than 0';
   }
   
@@ -42,7 +43,8 @@ export const validateCategory = (data: CategoryFormData): ValidationErrors => {
     errors.name = 'Category name must be less than 100 characters';
   }
   
-  if (data.monthly_budget && Number(data.monthly_budget) < 0) {
+  if (data.monthly_budget !== null && data.monthly_budget !== '' &&
+      (!Number.isFinite(Number(data.monthly_budget)) || Number(data.monthly_budget) < 0)) {
     errors.monthly_budget = 'Monthly budget cannot be negative';
   }
   

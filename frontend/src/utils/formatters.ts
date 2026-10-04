@@ -7,7 +7,10 @@ export const formatCurrency = (amount: number) => {
 };
 
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  const date = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',

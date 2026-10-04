@@ -32,4 +32,17 @@ describe('SummaryCard', () => {
 
     expect(screen.getByText('No budget set')).toBeInTheDocument();
   });
+
+  it('treats a zero budget as a real budget', () => {
+    render(<SummaryCard item={{
+      category_id: 'zero-id',
+      category_name: 'No spend',
+      monthly_budget: 0,
+      total_spent: 0,
+      is_over_budget: false,
+    }} />);
+
+    expect(screen.getByText('Budget: $0.00')).toBeInTheDocument();
+    expect(screen.getByText('0% used')).toBeInTheDocument();
+  });
 });

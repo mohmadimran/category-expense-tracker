@@ -17,7 +17,4 @@ const categorySchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster lookups
-categorySchema.index({ name: 1 });
-
 export default mongoose.model('Category', categorySchema);

@@ -1,9 +1,7 @@
 import axios from 'axios';
 import type { Category, CategoryInput, Expense, ExpenseFilters, ExpenseInput, Pagination, SummaryCategory } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (
-  import.meta.env.DEV ? '/api' : 'https://category-expense-tracker.onrender.com/api'
-);
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE,

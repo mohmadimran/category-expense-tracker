@@ -82,7 +82,7 @@ const ExpenseForm = ({ categories, onAddExpense }: ExpenseFormProps) => {
       <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Add New Expense</h3>
       
       {errors.submit && (
-        <div style={{
+        <div className="expense-form-grid" style={{
           padding: '10px',
           background: '#f8d7da',
           color: '#721c24',
