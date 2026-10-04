@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "bootstrap:admin": "node src/scripts/bootstrapAdmin.js"
+    "bootstrap:admin": "node src/scripts/bootstrapAdmin.js",
+    "test": "node --test"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -239,12 +239,8 @@ function App() {
       try {
         const { data } = await api.getSession();
         setUser(data.user); setCsrfToken(data.csrfToken);
-      } catch {
-        try {
-          const { data } = await api.refresh();
-          setUser(data.user); setCsrfToken(data.csrfToken);
-        } catch { setCsrfToken(null); }
-      } finally { setChecking(false); }
+      } catch { setCsrfToken(null); }
+      finally { setChecking(false); }
     };
     void restoreSession();
   }, []);
