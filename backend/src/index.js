@@ -16,10 +16,10 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
-const allowedOrigins = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean);
+const allowedOrigins = new Set([
+  'https://category-expense-tracker.vercel.app',
+  ...(process.env.CORS_ORIGINS || '').split(',').map(origin => origin.trim()).filter(Boolean),
+]);
 const trustedProxyHops = process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : undefined;
 
 app.disable('x-powered-by');
@@ -33,7 +33,7 @@ app.use(helmet());
 app.use(cors({
   credentials: true,
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
+    if (!origin || allowedOrigins.has(origin) || process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
     return callback(null, false);

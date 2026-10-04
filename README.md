@@ -81,7 +81,7 @@ Open the Vite URL shown in the terminal (usually `http://localhost:5173`). Durin
 
 - Keep secrets in environment variables. Do not commit `.env` files.
 - Set `MONGODB_URI` and `JWT_SECRET` in the backend environment. Public registration can run before an administrator is bootstrapped; an admin is needed to create categories and manage accounts.
-- For separate frontend and API origins, set `CORS_ORIGINS` to the exact frontend origin(s), separated by commas. Set frontend `VITE_API_BASE_URL` to the API URL including `/api`. For same-origin deployments, use `/api` behind a reverse proxy.
+- For the current Render and Vercel deployment, the frontend production build uses `https://category-expense-tracker.onrender.com/api` and the backend allows `https://category-expense-tracker.vercel.app` for credentialed CORS. The backend also accepts additional exact frontend origins through `CORS_ORIGINS`, separated by commas. For other separate frontend and API origins, set frontend `VITE_API_BASE_URL` to the API URL including `/api`. For same-origin deployments, use `/api` behind a reverse proxy.
 - Serve frontend and API over HTTPS in production. Credentialed session cookies require HTTPS when origins are separate.
 - Authentication endpoints are rate limited: registration allows 5 attempts per hour, sign-in 10 per 15 minutes, and refresh 30 per 15 minutes per client IP. The API also applies a general request limit.
 - Set `TRUST_PROXY` to the number of trusted proxy hops when running behind a reverse proxy.
