@@ -1,5 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import type { FormEvent, MouseEvent } from 'react';
+import type { ApiActionResult, Category, Expense, ExpenseInput } from '../types';
+
+interface ExpenseItemProps {
+  expense: Expense;
+  categories: Category[];
+  isEditing: boolean;
+  onEdit: (expense: Expense) => void;
+  onUpdate: (id: string, data: ExpenseInput) => Promise<ApiActionResult>;
+  onDelete: (id: string) => void;
+  onCancel: () => void;
+}
 
 const ExpenseItem = ({ 
   expense, 
@@ -9,7 +21,7 @@ const ExpenseItem = ({
   onUpdate, 
   onDelete, 
   onCancel 
-}) => {
+}: ExpenseItemProps) => {
   const [editData, setEditData] = useState({
     amount: expense.amount,
     description: expense.description,
@@ -18,7 +30,7 @@ const ExpenseItem = ({
   });
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setError('');
     

@@ -28,7 +28,14 @@ router.get('/', async (req, res) => {
         filter.date.$gte = new Date(start_date);
       }
       if (end_date) {
-        filter.date.$lte = new Date(end_date);
+        // Treat a date-only end_date as inclusive by matching before the next day.
+        const endDateExclusive = new Date(end_date);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(end_date)) {
+          endDateExclusive.setUTCDate(endDateExclusive.getUTCDate() + 1);
+          filter.date.$lt = endDateExclusive;
+        } else {
+          filter.date.$lte = endDateExclusive;
+        }
       }
     }
 

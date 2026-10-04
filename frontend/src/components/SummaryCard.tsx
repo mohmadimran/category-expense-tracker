@@ -1,7 +1,7 @@
-import React from 'react';
 import { formatCurrency } from '../utils/formatters';
+import type { SummaryCategory } from '../types';
 
-const SummaryCard = ({ item }) => {
+const SummaryCard = ({ item }: { item: SummaryCategory }) => {
   const { 
     category_name, 
     total_spent, 

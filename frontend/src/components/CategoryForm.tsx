@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { validateCategory } from '../utils/validators';
+import type { ChangeEvent, FormEvent } from 'react';
+import type { ApiActionResult, CategoryInput, ValidationErrors } from '../types';
 
-const CategoryForm = ({ onAddCategory }) => {
-  const [formData, setFormData] = useState({
+interface CategoryFormProps {
+  onAddCategory: (data: CategoryInput) => Promise<ApiActionResult>;
+}
+
+const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
+  const [formData, setFormData] = useState<{ name: string; monthly_budget: string }>({
     name: '',
     monthly_budget: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -18,7 +24,7 @@ const CategoryForm = ({ onAddCategory }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
     setSuccess('');
@@ -43,9 +49,9 @@ const CategoryForm = ({ onAddCategory }) => {
         setFormData({ name: '', monthly_budget: '' });
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setErrors({ submit: result.error });
+        setErrors({ submit: result.error || 'Failed to add category' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'Failed to add category' });
     } finally {
       setIsSubmitting(false);

@@ -1,7 +1,12 @@
-export const validateExpense = (data) => {
-  const errors = {};
+import type { ExpenseInput, CategoryInput, ValidationErrors } from '../types';
+
+type ExpenseFormData = Omit<ExpenseInput, 'amount'> & { amount: number | string };
+type CategoryFormData = Omit<CategoryInput, 'monthly_budget'> & { monthly_budget: number | string | null };
+
+export const validateExpense = (data: ExpenseFormData): ValidationErrors => {
+  const errors: ValidationErrors = {};
   
-  if (!data.amount || data.amount <= 0) {
+  if (!data.amount || Number(data.amount) <= 0) {
     errors.amount = 'Amount must be greater than 0';
   }
   
@@ -29,8 +34,8 @@ export const validateExpense = (data) => {
   return errors;
 };
 
-export const validateCategory = (data) => {
-  const errors = {};
+export const validateCategory = (data: CategoryFormData): ValidationErrors => {
+  const errors: ValidationErrors = {};
   
   if (!data.name || data.name.trim().length === 0) {
     errors.name = 'Category name is required';
@@ -38,7 +43,7 @@ export const validateCategory = (data) => {
     errors.name = 'Category name must be less than 100 characters';
   }
   
-  if (data.monthly_budget && data.monthly_budget < 0) {
+  if (data.monthly_budget && Number(data.monthly_budget) < 0) {
     errors.monthly_budget = 'Monthly budget cannot be negative';
   }
   

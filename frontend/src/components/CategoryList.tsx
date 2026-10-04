@@ -1,7 +1,7 @@
-import React from 'react';
 import { formatCurrency } from '../utils/formatters';
+import type { Category } from '../types';
 
-const CategoryList = ({ categories, onDelete }) => {
+const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDelete: (id: string, name: string) => void }) => {
   if (categories.length === 0) {
     return (
       <div style={{
