@@ -22,6 +22,7 @@ A team expense tracking application for recording expenses, organizing spending 
 │       ├── models/           # User, expense, and category schemas
 │       ├── routes/           # Authentication, expense, and category API routes
 │       ├── scripts/          # Initial administrator setup
+│       ├── tests/            # Auth API flow tests
 │       ├── utils/            # Shared API error handling
 │       └── index.js          # Express app and server startup
 └── frontend/
@@ -33,7 +34,7 @@ A team expense tracking application for recording expenses, organizing spending 
     │   ├── utils/            # Formatting and validation helpers
     │   ├── App.tsx           # Authentication gate and application shell
     │   └── types.ts          # Shared frontend types
-    └── tests/                # Frontend unit and component tests
+    └── tests/                # Unit, component, and authentication-flow tests
 ```
 
 ## Application workflow
@@ -97,4 +98,8 @@ npm test
 npm run build
 ```
 
-Check backend JavaScript syntax from `backend/` with `node --check` on the changed source files. The backend does not currently define a test script.
+Run the backend auth API flow test from `backend/`:
+
+```sh
+npm test
+```

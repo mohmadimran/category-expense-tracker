@@ -85,7 +85,10 @@ apiClient.interceptors.response.use(
         original.headers.set('X-CSRF-Token', token);
         return await apiClient(original);
       } catch (refreshError) {
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth:session-expired'));
+        const status = axios.isAxiosError(refreshError) ? refreshError.response?.status : undefined;
+        if (typeof window !== 'undefined' && (status === 401 || status === 403 || refreshError instanceof Error && refreshError.message === 'CSRF session is missing')) {
+          window.dispatchEvent(new Event('auth:session-expired'));
+        }
         return Promise.reject(refreshError);
       }
     }
@@ -107,7 +110,15 @@ apiClient.interceptors.response.use(
 const api = {
   register: (name: string, email: string, password: string) => apiClient.post<{ user: AuthUser; csrfToken: string }>('/auth/register', { name, email, password }),
   login: (email: string, password: string) => apiClient.post<{ user: AuthUser; csrfToken: string }>('/auth/login', { email, password }),
-  getSession: () => apiClient.get<{ user: AuthUser; csrfToken: string }>('/auth/session'),
+  getSession: async () => {
+    try {
+      return await apiClient.get<{ user: AuthUser; csrfToken: string }>('/auth/session');
+    } catch (error) {
+      if (!axios.isAxiosError(error) || error.response?.status !== 401) throw error;
+      await refreshAccessToken();
+      return apiClient.get<{ user: AuthUser; csrfToken: string }>('/auth/session');
+    }
+  },
   getCsrf: () => apiClient.get<{ csrfToken: string | null }>('/auth/csrf'),
   refresh: () => apiClient.post<{ user: AuthUser; csrfToken: string }>('/auth/refresh'),
   logout: () => apiClient.post('/auth/logout'),
