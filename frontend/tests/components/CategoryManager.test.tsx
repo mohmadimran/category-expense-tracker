@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import CategoryManager from './CategoryManager';
-import type { Category } from '../types';
+import CategoryManager from '../../src/components/CategoryManager';
+import type { Category } from '../../src/types';
 
 const categories: Category[] = [{ _id: 'food-id', name: 'Food', monthly_budget: null }];
 

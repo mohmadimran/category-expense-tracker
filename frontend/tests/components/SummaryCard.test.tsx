@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import SummaryCard from './SummaryCard';
-import type { SummaryCategory } from '../types';
+import SummaryCard from '../../src/components/SummaryCard';
+import type { SummaryCategory } from '../../src/types';
 
 describe('SummaryCard', () => {
   it('shows budget usage and over-budget status', () => {

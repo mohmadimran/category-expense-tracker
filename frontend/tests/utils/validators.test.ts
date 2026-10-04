@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateCategory, validateExpense } from './validators';
+import { validateCategory, validateExpense } from '../../src/utils/validators';
 
 describe('validateExpense', () => {
   it('accepts an expense with all required valid fields', () => {

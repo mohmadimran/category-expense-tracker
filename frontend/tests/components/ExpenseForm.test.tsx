@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import ExpenseForm from './ExpenseForm';
-import type { Category, ExpenseInput } from '../types';
+import ExpenseForm from '../../src/components/ExpenseForm';
+import type { Category, ExpenseInput } from '../../src/types';
 
 const categories: Category[] = [{ _id: 'food-id', name: 'Food', monthly_budget: 300 }];
 
