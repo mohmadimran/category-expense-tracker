@@ -40,6 +40,7 @@ router.get('/', async (req, res) => {
     }
 
     const filter = {};
+    if (req.user.role !== 'admin') filter.createdBy = req.user._id;
     
     if (category_id) {
       filter.category = category_id;
@@ -78,7 +79,8 @@ router.get('/', async (req, res) => {
       date: exp.date.toISOString().split('T')[0],
       category_id: exp.category?._id || null,
       category_name: exp.category?.name || 'Uncategorized',
-      monthly_budget: exp.category?.monthly_budget ?? null
+      monthly_budget: exp.category?.monthly_budget ?? null,
+      created_by: exp.createdBy?.toString() || null
     }));
 
     res.json({
@@ -110,7 +112,8 @@ router.post('/', validateExpense, async (req, res) => {
       amount,
       description: description.trim(),
       category: category_id,
-      date
+      date,
+      createdBy: req.user._id
     });
 
     await expense.save();
@@ -139,6 +142,9 @@ router.put('/:id', validateExpense, async (req, res) => {
     const expense = await Expense.findById(id);
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
+    }
+    if (req.user.role !== 'admin' && expense.createdBy?.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'You may only update your own expenses' });
     }
 
     // Verify category exists
@@ -169,6 +175,11 @@ router.put('/:id', validateExpense, async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const expense = await Expense.findById(id);
+    if (!expense) return res.status(404).json({ error: 'Expense not found' });
+    if (req.user.role !== 'admin' && expense.createdBy?.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'You may only delete your own expenses' });
+    }
     const result = await Expense.findByIdAndDelete(id);
     
     if (!result) {

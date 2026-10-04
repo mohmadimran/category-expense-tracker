@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const expenseSchema = new mongoose.Schema({
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   amount: {
     type: Number,
     required: [true, 'Amount is required'],

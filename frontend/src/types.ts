@@ -12,6 +12,7 @@ export interface Expense {
   category_id: string | null;
   category_name: string;
   monthly_budget: number | null;
+  created_by?: string | null;
 }
 
 export interface ExpenseInput {
