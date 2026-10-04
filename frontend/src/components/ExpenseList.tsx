@@ -14,6 +14,7 @@ interface ExpenseListProps {
   onPageChange: (page: number) => void;
   onUpdateExpense: (id: string, data: ExpenseInput) => Promise<ApiActionResult>;
   onDeleteExpense: (id: string) => Promise<ApiActionResult>;
+  canManageExpense: (expense: Expense) => boolean;
 }
 
 const ExpenseList = ({ 
@@ -26,7 +27,8 @@ const ExpenseList = ({
   onFilterChange, 
   onPageChange,
   onUpdateExpense,
-  onDeleteExpense
+  onDeleteExpense,
+  canManageExpense
 }: ExpenseListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -192,6 +194,7 @@ const ExpenseList = ({
                   <ExpenseItem
                     key={expense.id}
                     expense={expense}
+                    canManage={canManageExpense(expense)}
                     categories={categories}
                     isEditing={editingId === expense.id}
                     onEdit={handleEdit}

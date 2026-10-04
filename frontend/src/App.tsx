@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import CategoryManager from './components/CategoryManager';
@@ -6,10 +6,20 @@ import SummaryView from './components/SummaryView';
 import { useExpenses } from './hooks/useExpenses';
 import { useCategories } from './hooks/useCategories';
 import './App.css';
+import api, { setCsrfToken, type AuthUser, type ManagedUser } from './api/api';
 type Tab = 'expenses' | 'categories' | 'summary';
 
-function App() {
+function Dashboard({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('expenses');
+  const [accounts, setAccounts] = useState<ManagedUser[]>([]);
+  const [accountError, setAccountError] = useState('');
+  const [accountForm, setAccountForm] = useState({ name: '', email: '', password: '', role: 'member' as 'admin' | 'member' });
+  const loadAccounts = async () => setAccounts((await api.getUsers()).data);
+  useEffect(() => {
+    if (user.role === 'admin') {
+      api.getUsers().then(({ data }) => setAccounts(data)).catch(() => setAccountError('Could not load team accounts'));
+    }
+  }, [user.role]);
   
   const {
     expenses,
@@ -64,6 +74,7 @@ function App() {
               onPageChange={changePage}
               onUpdateExpense={updateExpense}
               onDeleteExpense={deleteExpense}
+              canManageExpense={expense => user.role === 'admin' || expense.created_by === user.id}
             />
           </>
         );
@@ -76,6 +87,7 @@ function App() {
             error={categoriesError}
             onAddCategory={addCategory}
             onDeleteCategory={deleteCategory}
+            canManage={user.role === 'admin'}
           />
         );
       
@@ -95,6 +107,7 @@ function App() {
         borderBottom: '2px solid #e9ecef',
         marginBottom: '20px'
       }}>
+        <span style={{ float: 'right' }}>{user.name} ({user.role}) <button onClick={onLogout}>Sign out</button></span>
         <h1 style={{ fontSize: '2rem', color: '#2c3e50', margin: 0 }}>
           💰 Team Expense Tracker
         </h1>
@@ -173,6 +186,26 @@ function App() {
         {renderTabContent()}
       </main>
 
+      {user.role === 'admin' && <section className="account-panel">
+        <h2>Team accounts</h2>
+        {accountError && <p role="alert">{accountError}</p>}
+        <form className="account-form" onSubmit={async event => {
+          event.preventDefault(); setAccountError('');
+          try { await api.createUser(accountForm); setAccountForm({ name: '', email: '', password: '', role: 'member' }); await loadAccounts(); }
+          catch { setAccountError('Could not create account. Emails must be unique and passwords need at least 12 characters.'); }
+        }}>
+          <input aria-label="Name" placeholder="Name" maxLength={100} required value={accountForm.name} onChange={e => setAccountForm({ ...accountForm, name: e.target.value })} />
+          <input aria-label="Email" placeholder="Email" type="email" required value={accountForm.email} onChange={e => setAccountForm({ ...accountForm, email: e.target.value })} />
+          <input aria-label="Temporary password" placeholder="Temporary password (12+ characters)" type="password" minLength={12} required value={accountForm.password} onChange={e => setAccountForm({ ...accountForm, password: e.target.value })} />
+          <select aria-label="Role" value={accountForm.role} onChange={e => setAccountForm({ ...accountForm, role: e.target.value as 'admin' | 'member' })}><option value="member">Member</option><option value="admin">Admin</option></select>
+          <button type="submit">Create account</button>
+        </form>
+        <ul className="account-list">{accounts.map(account => <li key={account.id}><span>{account.name} · {account.email} · {account.role} · {account.isActive ? 'Active' : 'Disabled'}</span>{account.id !== user.id && <span>
+          <button onClick={async () => { try { await api.updateUser(account.id, { isActive: !account.isActive }); await loadAccounts(); } catch { setAccountError('Could not update account'); } }}>{account.isActive ? 'Disable' : 'Enable'}</button>
+          <button onClick={async () => { try { await api.updateUser(account.id, { role: account.role === 'admin' ? 'member' : 'admin' }); await loadAccounts(); } catch { setAccountError('Could not update account'); } }}>{account.role === 'admin' ? 'Make member' : 'Make admin'}</button>
+        </span>}</li>)}</ul>
+      </section>}
+
       <footer className="app-footer" style={{
         textAlign: 'center',
         padding: '20px 0',
@@ -185,6 +218,33 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    api.getSession().then(({ data }) => { setUser(data.user); setCsrfToken(data.csrfToken); })
+      .catch(() => setCsrfToken(null)).finally(() => setChecking(false));
+  }, []);
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setError('');
+    try { const { data } = await api.login(email, password); setUser(data.user); setCsrfToken(data.csrfToken); setPassword(''); }
+    catch { setError('Email or password is incorrect.'); }
+  };
+  const logout = async () => { try { await api.logout(); } finally { setCsrfToken(null); setUser(null); } };
+  if (checking) return <main className="auth-screen"><p>Checking session…</p></main>;
+  if (!user) return <main className="auth-screen"><form className="login-card" onSubmit={submit}>
+    <h1>Team Expense Tracker</h1><p>Sign in to manage team expenses.</p>
+    {error && <p role="alert">{error}</p>}
+    <label>Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} /></label>
+    <label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
+    <button type="submit">Sign in</button>
+  </form></main>;
+  return <Dashboard user={user} onLogout={() => void logout()} />;
 }
 
 export default App;

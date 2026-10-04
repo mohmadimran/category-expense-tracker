@@ -5,6 +5,7 @@ import type { ApiActionResult, Category, Expense, ExpenseInput } from '../types'
 
 interface ExpenseItemProps {
   expense: Expense;
+  canManage: boolean;
   categories: Category[];
   isEditing: boolean;
   onEdit: (expense: Expense) => void;
@@ -14,7 +15,8 @@ interface ExpenseItemProps {
 }
 
 const ExpenseItem = ({ 
-  expense, 
+  expense,
+  canManage,
   categories, 
   isEditing, 
   onEdit, 
@@ -50,7 +52,7 @@ const ExpenseItem = ({
     onUpdate(expense.id, editData);
   };
 
-  if (isEditing) {
+  if (isEditing && canManage) {
     return (
       <tr>
         <td style={{ padding: '10px', border: '1px solid #ddd' }}>
@@ -149,7 +151,7 @@ const ExpenseItem = ({
         {formatCurrency(expense.amount)}
       </td>
       <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-        <button 
+        {canManage && <><button
           onClick={() => onEdit(expense)}
           style={{ 
             marginRight: '5px',
@@ -175,7 +177,7 @@ const ExpenseItem = ({
           }}
         >
           Delete
-        </button>
+        </button></>}
       </td>
     </tr>
   );

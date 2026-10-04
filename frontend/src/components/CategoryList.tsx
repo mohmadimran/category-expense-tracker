@@ -1,7 +1,7 @@
 import { formatCurrency } from '../utils/formatters';
 import type { Category } from '../types';
 
-const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDelete: (id: string, name: string) => void }) => {
+const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDelete?: (id: string, name: string) => void }) => {
   if (categories.length === 0) {
     return (
       <div style={{
@@ -27,9 +27,9 @@ const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDele
             <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>
               Monthly Budget
             </th>
-            <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>
+            {onDelete && <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>
               Actions
-            </th>
+            </th>}
           </tr>
         </thead>
         <tbody>
@@ -53,9 +53,9 @@ const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDele
                   <span style={{ color: '#666', fontSize: '14px' }}>No budget set</span>
                 )}
               </td>
-              <td style={{ padding: '12px', border: '1px solid #ddd' }}>
+              {onDelete && <td style={{ padding: '12px', border: '1px solid #ddd' }}>
                 <button
-                  onClick={() => onDelete(cat._id, cat.name)}
+                  onClick={() => onDelete?.(cat._id, cat.name)}
                   style={{
                     padding: '5px 12px',
                     background: '#dc3545',
@@ -67,7 +67,7 @@ const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDele
                 >
                   Delete
                 </button>
-              </td>
+              </td>}
             </tr>
           ))}
         </tbody>

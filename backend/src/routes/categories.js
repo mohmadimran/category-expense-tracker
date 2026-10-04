@@ -3,6 +3,7 @@ import Category from '../models/Category.js';
 import Expense from '../models/Expense.js';
 import { validateCategory } from '../middelware/validation.js';
 import { sendServerError } from '../utils/httpError.js';
+import { requireCsrf, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/categories - Create new category
-router.post('/', validateCategory, async (req, res) => {
+router.post('/', requireCsrf, requireRole('admin'), validateCategory, async (req, res) => {
   try {
     const { name, monthly_budget } = req.body;
 
@@ -52,7 +53,7 @@ router.post('/', validateCategory, async (req, res) => {
 });
 
 // DELETE /api/categories/:id - Delete category
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireCsrf, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 

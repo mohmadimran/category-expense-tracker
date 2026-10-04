@@ -9,6 +9,7 @@ interface CategoryManagerProps {
   error: string | null;
   onAddCategory: (data: CategoryInput) => Promise<ApiActionResult>;
   onDeleteCategory: (id: string) => Promise<ApiActionResult>;
+  canManage?: boolean;
 }
 
 const CategoryManager = ({ 
@@ -16,7 +17,8 @@ const CategoryManager = ({
   loading, 
   error, 
   onAddCategory, 
-  onDeleteCategory 
+  onDeleteCategory,
+  canManage = true
 }: CategoryManagerProps) => {
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(
@@ -32,7 +34,7 @@ const CategoryManager = ({
 
   return (
     <div>
-      <CategoryForm onAddCategory={onAddCategory} />
+      {canManage && <CategoryForm onAddCategory={onAddCategory} />}
       
       {error && (
         <div style={{
@@ -48,7 +50,7 @@ const CategoryManager = ({
       
       <CategoryList 
         categories={categories} 
-        onDelete={handleDelete} 
+        onDelete={canManage ? handleDelete : undefined}
       />
     </div>
   );

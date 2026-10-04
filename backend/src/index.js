@@ -4,8 +4,11 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import expenseRoutes from './routes/expenses.js';
 import categoryRoutes from './routes/categories.js';
+import authRoutes from './routes/auth.js';
+import { requireAuth, requireCsrf } from './middleware/auth.js';
 import Expense from './models/Expense.js';
 import Category from './models/Category.js';
 
@@ -28,6 +31,7 @@ if (trustedProxyHops !== undefined) {
 }
 app.use(helmet());
 app.use(cors({
+  credentials: true,
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
       return callback(null, true);
@@ -42,12 +46,17 @@ app.use('/api', rateLimit({
   legacyHeaders: false,
 }));
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 
 // Routes
-app.use('/api/expenses', expenseRoutes);
-app.use('/api/categories', categoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/expenses', requireAuth, (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return requireCsrf(req, res, next);
+  return next();
+}, expenseRoutes);
+app.use('/api/categories', requireAuth, categoryRoutes);
 
-app.get('/api/summary', async (req, res) => {
+app.get('/api/summary', requireAuth, async (req, res) => {
   try {
     
     const { month, year } = req.query;
@@ -197,12 +206,19 @@ const startServer = async () => {
   if (!process.env.MONGODB_URI) {
     throw new Error('MONGODB_URI must be configured before the server can start');
   }
+  if (!process.env.JWT_SECRET || Buffer.byteLength(process.env.JWT_SECRET) < 32) {
+    throw new Error('JWT_SECRET must contain at least 32 bytes');
+  }
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('PORT must be a valid TCP port');
   }
 
   await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   console.log('Connected to MongoDB');
+  const { default: User } = await import('./models/User.js');
+  if (!await User.exists({ role: 'admin', isActive: true })) {
+    throw new Error('No active admin exists. Run npm run bootstrap:admin to create the initial admin account');
+  }
   const server = app.listen(port, () => console.log(`Server running on port ${port}`));
 
   for (const signal of ['SIGINT', 'SIGTERM']) {
