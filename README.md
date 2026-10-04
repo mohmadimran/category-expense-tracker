@@ -19,7 +19,7 @@ A team expense tracking application for recording expenses, organizing spending 
 │   └── src/
 │       ├── middleware/       # Authentication, roles, and CSRF checks
 │       ├── middelware/       # Request body validation
-│       ├── models/           # User, expense, and category schemas
+│       ├── models/           # User, expense, category, and setup schemas
 │       ├── routes/           # Authentication, expense, and category API routes
 │       ├── scripts/          # Initial administrator setup
 │       ├── tests/            # Auth API flow tests
@@ -43,8 +43,9 @@ A team expense tracking application for recording expenses, organizing spending 
 2. Anyone can register as a member or sign in. The API issues a 15-minute HTTP-only access cookie, a rotating refresh cookie with a 30-day session lifetime, and a CSRF token.
 3. The Axios client sends cookies with API requests and attaches the CSRF token to write requests. When access expires, it refreshes the session and retries the request.
 4. Authentication middleware validates the session and loads the active user. Role middleware restricts administrator operations.
-5. Expense records are associated with their creator. Members can access their own expenses; admins can access all expenses. Categories and summaries are shared across the team.
-6. Administrators can create and manage team accounts from the application. Public registration always creates a member account.
+5. After sign-in, the frontend loads shared categories. If the database has no categories, it posts an authenticated, CSRF-protected initialization request; the API stores a starter set once and returns it for the Categories tab and expense dropdown.
+6. Expense records are associated with their creator. Members can access their own expenses; admins can access all expenses. Categories and summaries are shared across the team.
+7. Administrators can create and manage team accounts from the application. Public registration always creates a member account.
 
 The API exposes `/api/auth` for sessions and account administration, `/api/expenses` for expense records, `/api/categories` for shared categories, `/api/summary` for category totals, and `/api/health` for service readiness.
 
@@ -81,7 +82,7 @@ Open the Vite URL shown in the terminal (usually `http://localhost:5173`). Durin
 
 - Keep secrets in environment variables. Do not commit `.env` files.
 - Set `MONGODB_URI` and `JWT_SECRET` in the backend environment. Public registration can run before an administrator is bootstrapped; an admin is needed to create categories and manage accounts.
-- For the current Render and Vercel deployment, the frontend production build uses `https://category-expense-tracker.onrender.com/api` and the backend allows `https://category-expense-tracker.vercel.app` for credentialed CORS. The backend also accepts additional exact frontend origins through `CORS_ORIGINS`, separated by commas. For other separate frontend and API origins, set frontend `VITE_API_BASE_URL` to the API URL including `/api`. For same-origin deployments, use `/api` behind a reverse proxy.
+- For the current Render and Vercel deployment, Vercel rewrites `/api/*` requests to `https://category-expense-tracker.onrender.com/api/*` so session cookies remain on the frontend site. The backend allows `https://category-expense-tracker.vercel.app` and accepts additional exact frontend origins through `CORS_ORIGINS`, separated by commas. For other separate frontend and API origins, set frontend `VITE_API_BASE_URL` to the API URL including `/api` and configure the backend CORS allowlist. For same-origin deployments, use `/api` behind a reverse proxy.
 - Serve frontend and API over HTTPS in production. Credentialed session cookies require HTTPS when origins are separate.
 - Authentication endpoints are rate limited: registration allows 5 attempts per hour, sign-in 10 per 15 minutes, and refresh 30 per 15 minutes per client IP. The API also applies a general request limit.
 - Set `TRUST_PROXY` to the number of trusted proxy hops when running behind a reverse proxy.

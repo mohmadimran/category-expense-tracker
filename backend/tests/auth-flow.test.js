@@ -6,7 +6,10 @@ import { createServer } from 'node:http';
 import { mock, test } from 'node:test';
 import User from '../src/models/User.js';
 import RefreshToken from '../src/models/RefreshToken.js';
+import Category from '../src/models/Category.js';
+import CategorySetup from '../src/models/CategorySetup.js';
 import authRoutes from '../src/routes/auth.js';
+import categoryRoutes from '../src/routes/categories.js';
 import { requireAuth, requireCsrf, requireRole } from '../src/middleware/auth.js';
 
 process.env.JWT_SECRET = 'backend-test-secret-that-is-at-least-32-bytes';
@@ -51,6 +54,8 @@ const request = async (baseUrl, jar, path, { method = 'GET', body, headers = {} 
 test('registration, login, session refresh, authorization, logout, and signup limiting work end to end', async t => {
   const users = new Map();
   const refreshTokens = new Map();
+  const categories = [];
+  let categorySetupCompleted = false;
   const nextId = () => new mongoose.Types.ObjectId();
 
   t.mock.method(User, 'create', async data => {
@@ -88,11 +93,26 @@ test('registration, login, session refresh, authorization, logout, and signup li
     }
     return { modifiedCount: 1 };
   });
+  t.mock.method(Category, 'find', () => ({ sort: async () => categories }));
+  t.mock.method(Category, 'exists', async () => categories.length ? { _id: categories[0]._id } : null);
+  t.mock.method(Category, 'updateOne', async (filter, update) => {
+    if (!categories.some(category => category.name === filter.name)) {
+      categories.push({ _id: nextId(), ...update.$setOnInsert });
+    }
+    return { upsertedCount: 1 };
+  });
+  t.mock.method(CategorySetup, 'exists', async () => categorySetupCompleted ? { _id: 'starter-categories-v1' } : null);
+  t.mock.method(CategorySetup, 'create', async () => {
+    if (categorySetupCompleted) throw Object.assign(new Error('duplicate setup'), { code: 11000 });
+    categorySetupCompleted = true;
+    return { _id: 'starter-categories-v1' };
+  });
 
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
   app.use('/api/auth', authRoutes);
+  app.use('/api/categories', requireAuth, categoryRoutes);
   app.get('/api/protected', requireAuth, (req, res) => res.json({ userId: req.user.id }));
   app.post('/api/protected', requireAuth, requireCsrf, (req, res) => res.json({ ok: true }));
   app.get('/api/admin', requireAuth, requireRole('admin'), (req, res) => res.json({ ok: true }));
@@ -102,7 +122,10 @@ test('registration, login, session refresh, authorization, logout, and signup li
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
   const jar = new Map();
 
-  let result = await request(baseUrl, jar, '/api/auth/register', {
+  let result = await request(baseUrl, jar, '/api/categories');
+  assert.equal(result.response.status, 401, 'category listing must require authentication');
+
+  result = await request(baseUrl, jar, '/api/auth/register', {
     method: 'POST',
     body: { name: 'Test Member', email: 'member@example.test', password: 'a-long-test-password-123', role: 'admin' },
   });
@@ -114,6 +137,26 @@ test('registration, login, session refresh, authorization, logout, and signup li
   assert.ok(registrationCookies.find(cookie => cookie.startsWith('refresh=')).includes('HttpOnly'));
   assert.ok(!registrationCookies.find(cookie => cookie.startsWith('csrf=')).includes('HttpOnly'));
   const originalRefresh = jar.get('refresh');
+
+  result = await request(baseUrl, jar, '/api/categories/initialize', { method: 'POST', body: {} });
+  assert.equal(result.response.status, 403, 'starter categories must require a CSRF token');
+  result = await request(baseUrl, jar, '/api/categories/initialize', {
+    method: 'POST', body: {}, headers: { 'x-csrf-token': jar.get('csrf') },
+  });
+  assert.equal(result.response.status, 200);
+  assert.deepEqual(result.data.map(category => category.name), [
+    'Food & Dining', 'Transportation', 'Housing', 'Utilities',
+    'Healthcare', 'Shopping', 'Entertainment', 'Other',
+  ]);
+
+  result = await request(baseUrl, jar, '/api/categories/initialize', {
+    method: 'POST', body: {}, headers: { 'x-csrf-token': jar.get('csrf') },
+  });
+  assert.equal(result.data.length, 8, 'repeated initialization must not duplicate starter categories');
+
+  result = await request(baseUrl, jar, '/api/categories');
+  assert.equal(result.response.status, 200);
+  assert.equal(result.data.length, 8, 'authenticated category listing must return starter categories for the dropdown');
 
   result = await request(baseUrl, jar, '/api/auth/session');
   assert.equal(result.response.status, 200);

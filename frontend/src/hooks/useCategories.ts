@@ -13,7 +13,12 @@ export const useCategories = () => {
     setError(null);
     try {
       const response = await api.getCategories();
-      setCategories(response.data || []);
+      let nextCategories = response.data || [];
+      if (nextCategories.length === 0) {
+        const initialized = await api.initializeCategories();
+        nextCategories = initialized.data || [];
+      }
+      setCategories(nextCategories);
     } catch (err) {
       const errorMsg = getErrorMessage(err, 'Failed to fetch categories');
       setError(errorMsg);
