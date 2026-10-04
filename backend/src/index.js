@@ -217,7 +217,7 @@ const startServer = async () => {
   console.log('Connected to MongoDB');
   const { default: User } = await import('./models/User.js');
   if (!await User.exists({ role: 'admin', isActive: true })) {
-    throw new Error('No active admin exists. Run npm run bootstrap:admin to create the initial admin account');
+    console.warn('No active admin exists. Public member registration is available; run npm run bootstrap:admin to enable category and account management.');
   }
   const server = app.listen(port, () => console.log(`Server running on port ${port}`));
 

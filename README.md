@@ -54,15 +54,15 @@ Requirements: Node.js, npm, and a running MongoDB instance.
 
 1. Create `backend/.env` from `backend/.env.example`.
 2. Set `MONGODB_URI` and a random `JWT_SECRET` with at least 32 bytes.
-3. For the first setup only, set `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL`, and `BOOTSTRAP_ADMIN_PASSWORD` in the backend environment. The password must contain 12–72 UTF-8 bytes.
-4. In `backend/`, install dependencies and create the initial administrator:
+3. In `backend/`, install dependencies:
 
    ```sh
    npm install
-   npm run bootstrap:admin
    ```
 
-5. Remove the bootstrap password from the environment. Start the API from `backend/`:
+4. To enable administrator features immediately, set `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL`, and `BOOTSTRAP_ADMIN_PASSWORD` in the backend environment. The password must contain 12–72 UTF-8 bytes. Then run `npm run bootstrap:admin` from `backend/` and remove the bootstrap password afterward. This step is optional; without an admin the API still starts and public member registration works, but category and team-account management are unavailable.
+
+5. Start the API from `backend/`:
 
    ```sh
    npm run dev
@@ -80,7 +80,7 @@ Open the Vite URL shown in the terminal (usually `http://localhost:5173`). Durin
 ## Configuration and deployment
 
 - Keep secrets in environment variables. Do not commit `.env` files.
-- Set `MONGODB_URI` and `JWT_SECRET` in the backend environment. The server requires an active administrator before it starts.
+- Set `MONGODB_URI` and `JWT_SECRET` in the backend environment. Public registration can run before an administrator is bootstrapped; an admin is needed to create categories and manage accounts.
 - For separate frontend and API origins, set `CORS_ORIGINS` to the exact frontend origin(s), separated by commas. Set frontend `VITE_API_BASE_URL` to the API URL including `/api`. For same-origin deployments, use `/api` behind a reverse proxy.
 - Serve frontend and API over HTTPS in production. Credentialed session cookies require HTTPS when origins are separate.
 - Authentication endpoints are rate limited: registration allows 5 attempts per hour, sign-in 10 per 15 minutes, and refresh 30 per 15 minutes per client IP. The API also applies a general request limit.
