@@ -104,3 +104,33 @@ Run the backend auth API flow test from `backend/`:
 ```sh
 npm test
 ```
+
+## Docker
+
+Requirements: Docker Engine and the Docker Compose plugin.
+
+1. Copy `.env.docker.example` to `.env` and set `JWT_SECRET` to a random value of at least 32 bytes.
+2. Start MongoDB, the API, and the web app from the repository root:
+
+   ```sh
+   docker compose up --build
+   ```
+
+3. Open `http://localhost:8080`. The Nginx container serves the frontend and proxies `/api` to the backend, so browser session cookies stay same-origin. MongoDB data persists in the `mongo-data` volume.
+
+To create the first administrator, set `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` in `.env`, then run:
+
+```sh
+docker compose --profile setup run --rm bootstrap-admin
+```
+
+Stop the services with `docker compose down`; add `-v` only when you also intend to remove the MongoDB data volume.
+
+## CI/CD
+
+GitHub Actions runs backend tests, frontend lint/tests/build, and builds both Docker images on pushes and pull requests targeting `main`. A push to `main` deploys only after all checks pass. Configure these repository Actions secrets to enable platform deployments:
+
+- `RENDER_DEPLOY_HOOK_URL`: the backend service deploy hook from Render.
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`: the Vercel CLI credentials and project identifiers for the frontend project rooted at `frontend/`.
+
+Without these secrets, the workflow still validates code and images and reports the corresponding deployment step as skipped. If deploying through this workflow, disable automatic Git deployments in Render and Vercel to avoid duplicate deploys.
