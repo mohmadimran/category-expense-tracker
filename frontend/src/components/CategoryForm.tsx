@@ -70,7 +70,7 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
       <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Add New Category</h3>
       
       {errors.submit && (
-        <div style={{
+        <div className="category-form-grid" style={{
           padding: '10px',
           background: '#f8d7da',
           color: '#721c24',

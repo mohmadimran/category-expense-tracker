@@ -9,8 +9,12 @@ const SummaryCard = ({ item }: { item: SummaryCategory }) => {
     is_over_budget 
   } = item;
 
-  const hasBudget = monthly_budget !== null && monthly_budget > 0;
-  const utilization = hasBudget ? (total_spent / monthly_budget) * 100 : 0;
+  const hasBudget = monthly_budget !== null;
+  const utilization = hasBudget
+    ? monthly_budget === 0
+      ? (total_spent > 0 ? Number.POSITIVE_INFINITY : 0)
+      : (total_spent / monthly_budget) * 100
+    : 0;
   
   const getUtilizationColor = () => {
     if (utilization > 100) return '#dc3545';
@@ -60,7 +64,7 @@ const SummaryCard = ({ item }: { item: SummaryCategory }) => {
           </div>
           {hasBudget && (
             <div style={{ fontSize: '12px', color: '#666' }}>
-              {utilization.toFixed(0)}% used
+              {Number.isFinite(utilization) ? `${utilization.toFixed(0)}% used` : 'Over budget'}
             </div>
           )}
         </div>

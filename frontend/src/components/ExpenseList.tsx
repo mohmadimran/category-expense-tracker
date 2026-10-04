@@ -162,7 +162,7 @@ const ExpenseList = ({
         </div>
       ) : (
         <>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="expense-table-scroll" style={{ overflowX: 'auto' }}>
             <table style={{ 
               width: '100%', 
               borderCollapse: 'collapse',
@@ -206,7 +206,7 @@ const ExpenseList = ({
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div style={{
+            <div className="pagination-controls" style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -218,7 +218,7 @@ const ExpenseList = ({
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} expenses
               </div>
               
-              <div style={{ display: 'flex', gap: '5px' }}>
+              <div className="pagination-buttons" style={{ display: 'flex', gap: '5px' }}>
                 <button
                   onClick={() => onPageChange(pagination.page - 1)}
                   disabled={pagination.page <= 1}

@@ -2,6 +2,7 @@ import express from 'express';
 import Category from '../models/Category.js';
 import Expense from '../models/Expense.js';
 import { validateCategory } from '../middelware/validation.js';
+import { sendServerError } from '../utils/httpError.js';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
     const categories = await Category.find().sort({ name: 1 });
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res, error, 'List categories failed');
   }
 });
 
@@ -28,7 +29,7 @@ router.post('/', validateCategory, async (req, res) => {
 
     const category = new Category({
       name: name.trim(),
-      monthly_budget: monthly_budget || null
+      monthly_budget: monthly_budget ?? null
     });
 
     await category.save();
@@ -43,7 +44,10 @@ router.post('/', validateCategory, async (req, res) => {
         errors: Object.values(error.errors).map(e => e.message) 
       });
     }
-    res.status(500).json({ error: error.message });
+    if (error.code === 11000) {
+      return res.status(409).json({ error: 'Category name already exists' });
+    }
+    return sendServerError(res, error, 'Create category failed');
   }
 });
 
@@ -70,7 +74,7 @@ router.delete('/:id', async (req, res) => {
       message: `Category deleted successfully. ${deleteResult.deletedCount} associated expenses were also deleted.`
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res, error, 'Delete category failed');
   }
 });
 

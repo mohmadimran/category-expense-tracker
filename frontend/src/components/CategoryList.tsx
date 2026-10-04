@@ -39,7 +39,7 @@ const CategoryList = ({ categories, onDelete }: { categories: Category[]; onDele
                 <strong>{cat.name}</strong>
               </td>
               <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                {cat.monthly_budget ? (
+                {cat.monthly_budget !== null ? (
                   <span style={{ 
                     background: '#d4edda', 
                     padding: '3px 10px',

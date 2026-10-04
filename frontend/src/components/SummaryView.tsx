@@ -45,7 +45,7 @@ const SummaryView = () => {
 
   return (
     <div>
-      <div style={{
+      <div className="summary-header" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -60,7 +60,7 @@ const SummaryView = () => {
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="summary-period-controls" style={{ display: 'flex', gap: '10px' }}>
           <select 
             value={month} 
             onChange={handleMonthChange}
@@ -165,7 +165,7 @@ const SummaryView = () => {
           <p style={{ fontSize: '14px' }}>Add some expenses to see the summary</p>
         </div>
       ) : (
-        <div style={{
+        <div className="summary-cards-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
           gap: '15px'

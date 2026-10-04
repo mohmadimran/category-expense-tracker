@@ -1,4 +1,5 @@
 import type { ExpenseInput, CategoryInput, ValidationErrors } from '../types';
+import { formatDateInput } from './formatters';
 
 type ExpenseFormData = Omit<ExpenseInput, 'amount'> & { amount: number | string };
 type CategoryFormData = Omit<CategoryInput, 'monthly_budget'> & { monthly_budget: number | string | null };
@@ -6,7 +7,8 @@ type CategoryFormData = Omit<CategoryInput, 'monthly_budget'> & { monthly_budget
 export const validateExpense = (data: ExpenseFormData): ValidationErrors => {
   const errors: ValidationErrors = {};
   
-  if (!data.amount || Number(data.amount) <= 0) {
+  const amount = Number(data.amount);
+  if (!data.amount || !Number.isFinite(amount) || amount <= 0) {
     errors.amount = 'Amount must be greater than 0';
   }
   
@@ -23,10 +25,8 @@ export const validateExpense = (data: ExpenseFormData): ValidationErrors => {
   if (!data.date) {
     errors.date = 'Date is required';
   } else {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expenseDate = new Date(data.date);
-    if (expenseDate > today) {
+    const today = formatDateInput(new Date());
+    if (data.date > today) {
       errors.date = 'Date cannot be in the future';
     }
   }
@@ -43,7 +43,8 @@ export const validateCategory = (data: CategoryFormData): ValidationErrors => {
     errors.name = 'Category name must be less than 100 characters';
   }
   
-  if (data.monthly_budget && Number(data.monthly_budget) < 0) {
+  if (data.monthly_budget !== null && data.monthly_budget !== '' &&
+      (!Number.isFinite(Number(data.monthly_budget)) || Number(data.monthly_budget) < 0)) {
     errors.monthly_budget = 'Monthly budget cannot be negative';
   }
   

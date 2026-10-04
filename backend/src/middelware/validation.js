@@ -44,7 +44,7 @@ export const validateCategory = [
     .isLength({ min: 1, max: 100 }).withMessage('Category name must be between 1 and 100 characters'),
   
   body('monthly_budget')
-    .optional()
+    .optional({ values: 'null' })
     .isFloat({ min: 0 }).withMessage('Monthly budget cannot be negative')
     .toFloat(),
   
