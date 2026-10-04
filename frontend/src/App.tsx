@@ -61,7 +61,13 @@ function Dashboard({ user, onLogout }: { user: AuthUser; onLogout: () => void })
         return (
           <>
             <ExpenseForm 
-              categories={categories} 
+              categories={categories}
+              categoriesLoading={categoriesLoading}
+              categoriesError={categoriesError}
+              onRetryCategories={() => void refreshCategories()}
+              noCategoriesMessage={user.role === 'admin'
+                ? 'Add a category from the Categories tab before recording an expense.'
+                : 'Ask an administrator to add a category before recording an expense.'}
               onAddExpense={addExpense}
             />
             <ExpenseList 

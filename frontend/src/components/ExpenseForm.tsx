@@ -6,10 +6,21 @@ import type { Category, ExpenseInput, ApiActionResult, ValidationErrors } from '
 
 interface ExpenseFormProps {
   categories: Category[];
+  categoriesLoading?: boolean;
+  categoriesError?: string | null;
+  onRetryCategories?: () => void;
+  noCategoriesMessage?: string;
   onAddExpense: (data: ExpenseInput) => Promise<ApiActionResult>;
 }
 
-const ExpenseForm = ({ categories, onAddExpense }: ExpenseFormProps) => {
+const ExpenseForm = ({
+  categories,
+  categoriesLoading = false,
+  categoriesError = null,
+  onRetryCategories,
+  noCategoriesMessage = 'No categories are available yet.',
+  onAddExpense,
+}: ExpenseFormProps) => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -158,10 +169,23 @@ const ExpenseForm = ({ categories, onAddExpense }: ExpenseFormProps) => {
           </div>
           
           <div>
+            {categoriesError && (
+              <div role="alert" style={{ color: '#b02a37', fontSize: '12px', marginBottom: '4px' }}>
+                Could not load categories. {categoriesError}
+                {onRetryCategories && (
+                  <button type="button" onClick={onRetryCategories} style={{ marginLeft: '6px' }}>
+                    Retry
+                  </button>
+                )}
+              </div>
+            )}
             <select
               name="category_id"
               value={formData.category_id}
               onChange={handleChange}
+              disabled={categoriesLoading || Boolean(categoriesError) || categories.length === 0}
+              aria-label="Category"
+              aria-describedby={!categoriesLoading && !categoriesError && categories.length === 0 ? 'category-empty-help' : undefined}
               style={{
                 padding: '8px 12px',
                 border: `1px solid ${errors.category_id ? '#dc3545' : '#ddd'}`,
@@ -171,13 +195,20 @@ const ExpenseForm = ({ categories, onAddExpense }: ExpenseFormProps) => {
                 background: 'white'
               }}
             >
-              <option value="">Select Category</option>
+              <option value="">
+                {categoriesLoading ? 'Loading categories…' : categoriesError ? 'Categories unavailable' : categories.length === 0 ? 'No categories available' : 'Select Category'}
+              </option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat._id}>
                   {cat.name}
                 </option>
               ))}
             </select>
+            {!categoriesLoading && !categoriesError && categories.length === 0 && (
+              <div id="category-empty-help" style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>
+                {noCategoriesMessage}
+              </div>
+            )}
             {errors.category_id && (
               <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>
                 {errors.category_id}

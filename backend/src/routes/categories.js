@@ -1,11 +1,59 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import CategorySetup from '../models/CategorySetup.js';
 import Expense from '../models/Expense.js';
 import { validateCategory } from '../middelware/validation.js';
 import { sendServerError } from '../utils/httpError.js';
 import { requireCsrf, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+const STARTER_SETUP_ID = 'starter-categories-v1';
+const STARTER_CATEGORIES = [
+  'Food & Dining',
+  'Transportation',
+  'Housing',
+  'Utilities',
+  'Healthcare',
+  'Shopping',
+  'Entertainment',
+  'Other',
+].map(name => ({ name, monthly_budget: null }));
+
+// POST /api/categories/initialize - Add starter categories once for an empty database.
+router.post('/initialize', requireCsrf, async (req, res) => {
+  try {
+    const setupCompleted = await CategorySetup.exists({ _id: STARTER_SETUP_ID });
+    if (!setupCompleted) {
+      const hasCategories = await Category.exists({});
+      if (!hasCategories) {
+        for (const category of STARTER_CATEGORIES) {
+          try {
+            await Category.updateOne(
+              { name: category.name },
+              { $setOnInsert: category },
+              { upsert: true },
+            );
+          } catch (error) {
+            // A concurrent initializer may have inserted this unique category first.
+            if (error.code !== 11000) throw error;
+          }
+        }
+      }
+
+      try {
+        await CategorySetup.create({ _id: STARTER_SETUP_ID });
+      } catch (error) {
+        // Another request may have completed initialization at the same time.
+        if (error.code !== 11000) throw error;
+      }
+    }
+
+    const categories = await Category.find().sort({ name: 1 });
+    return res.json(categories);
+  } catch (error) {
+    return sendServerError(res, error, 'Initialize categories failed');
+  }
+});
 
 // GET /api/categories - List all categories
 router.get('/', async (req, res) => {

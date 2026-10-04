@@ -53,4 +53,40 @@ describe('ExpenseForm', () => {
 
     expect(await screen.findByText('Category does not exist')).toBeInTheDocument();
   });
+
+  it('shows available categories in the expense dropdown', () => {
+    render(<ExpenseForm categories={categories} onAddExpense={vi.fn()} />);
+
+    expect(screen.getByRole('option', { name: 'Food' })).toHaveValue('food-id');
+  });
+
+  it('shows a retry action when categories fail to load', async () => {
+    const onRetryCategories = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ExpenseForm
+        categories={[]}
+        categoriesError="Request failed"
+        onRetryCategories={onRetryCategories}
+        onAddExpense={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetryCategories).toHaveBeenCalledOnce();
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load categories');
+  });
+
+  it('explains when the account has no categories yet', () => {
+    render(
+      <ExpenseForm
+        categories={[]}
+        noCategoriesMessage="Ask an administrator to add a category."
+        onAddExpense={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('option', { name: 'No categories available' })).toBeDisabled();
+    expect(screen.getByText('Ask an administrator to add a category.')).toBeInTheDocument();
+  });
 });

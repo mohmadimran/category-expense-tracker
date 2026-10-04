@@ -143,6 +143,7 @@ const api = {
   
   // Categories
   getCategories: () => apiClient.get<Category[]>('/categories'),
+  initializeCategories: () => apiClient.post<Category[]>('/categories/initialize'),
   createCategory: (data: CategoryInput) => apiClient.post('/categories', data),
   deleteCategory: (id: string) => apiClient.delete(`/categories/${id}`),
   
