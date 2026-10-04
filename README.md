@@ -8,6 +8,7 @@ A team expense tracking application for recording expenses, organizing spending 
 - Organize spending with shared categories and monthly budgets.
 - Review category totals and budget status by month.
 - Sign in with administrator or member access.
+- Register a member account directly from the sign-in screen.
 - Give members access to their own expenses; administrators can manage all expenses, categories, and team accounts.
 
 ## Repository structure
@@ -38,11 +39,11 @@ A team expense tracking application for recording expenses, organizing spending 
 ## Application workflow
 
 1. The frontend checks for an existing session. Signed-out users see the sign-in form.
-2. The API verifies credentials and issues an eight-hour, HTTP-only session cookie plus a CSRF token.
-3. The Axios client sends cookies with API requests and attaches the CSRF token to write requests.
+2. Anyone can register as a member or sign in. The API issues a 15-minute HTTP-only access cookie, a rotating refresh cookie with a 30-day session lifetime, and a CSRF token.
+3. The Axios client sends cookies with API requests and attaches the CSRF token to write requests. When access expires, it refreshes the session and retries the request.
 4. Authentication middleware validates the session and loads the active user. Role middleware restricts administrator operations.
 5. Expense records are associated with their creator. Members can access their own expenses; admins can access all expenses. Categories and summaries are shared across the team.
-6. Administrators create and manage team accounts from the application. Public self-registration is disabled.
+6. Administrators can create and manage team accounts from the application. Public registration always creates a member account.
 
 The API exposes `/api/auth` for sessions and account administration, `/api/expenses` for expense records, `/api/categories` for shared categories, `/api/summary` for category totals, and `/api/health` for service readiness.
 
@@ -81,6 +82,7 @@ Open the Vite URL shown in the terminal (usually `http://localhost:5173`). Durin
 - Set `MONGODB_URI` and `JWT_SECRET` in the backend environment. The server requires an active administrator before it starts.
 - For separate frontend and API origins, set `CORS_ORIGINS` to the exact frontend origin(s), separated by commas. Set frontend `VITE_API_BASE_URL` to the API URL including `/api`. For same-origin deployments, use `/api` behind a reverse proxy.
 - Serve frontend and API over HTTPS in production. Credentialed session cookies require HTTPS when origins are separate.
+- Authentication endpoints are rate limited: registration allows 5 attempts per hour, sign-in 10 per 15 minutes, and refresh 30 per 15 minutes per client IP. The API also applies a general request limit.
 - Set `TRUST_PROXY` to the number of trusted proxy hops when running behind a reverse proxy.
 - `VITE_*` variables are public and bundled into the frontend; never put secrets in them.
 - Legacy expenses created before authentication have no owner. They remain accessible to administrators; members will not see or modify them.
