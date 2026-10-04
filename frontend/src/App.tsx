@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import ExpenseForm from './components/ExpenseForm.jsx';
-import ExpenseList from './components/ExpenseList.jsx';
-import CategoryManager from './components/CategoryManager.jsx';
-import SummaryView from './components/SummaryView.jsx';
-import { useExpenses } from './hooks/useExpenses.js';
-import { useCategories } from './hooks/useCategories.js';
+import { useState } from 'react';
+import ExpenseForm from './components/ExpenseForm';
+import ExpenseList from './components/ExpenseList';
+import CategoryManager from './components/CategoryManager';
+import SummaryView from './components/SummaryView';
+import { useExpenses } from './hooks/useExpenses';
+import { useCategories } from './hooks/useCategories';
+type Tab = 'expenses' | 'categories' | 'summary';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('expenses');
+  const [activeTab, setActiveTab] = useState<Tab>('expenses');
   
   const {
     expenses,
@@ -32,12 +33,13 @@ function App() {
     refreshCategories
   } = useCategories();
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     if (tab === 'expenses') {
       refreshExpenses();
     } else if (tab === 'categories') {
       refreshCategories();
+      refreshExpenses();
     }
   };
 

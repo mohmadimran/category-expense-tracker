@@ -1,6 +1,20 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ExpenseItem from './ExpenseItem';
 import LoadingSpinner from './LoadingSpinner';
+import type { ApiActionResult, Category, Expense, ExpenseFilters, ExpenseInput, Pagination } from '../types';
+
+interface ExpenseListProps {
+  expenses: Expense[];
+  categories: Category[];
+  pagination: Pagination;
+  filters: ExpenseFilters;
+  loading: boolean;
+  error: string | null;
+  onFilterChange: (filters: Partial<ExpenseFilters>) => void;
+  onPageChange: (page: number) => void;
+  onUpdateExpense: (id: string, data: ExpenseInput) => Promise<ApiActionResult>;
+  onDeleteExpense: (id: string) => Promise<ApiActionResult>;
+}
 
 const ExpenseList = ({ 
   expenses, 
@@ -13,21 +27,22 @@ const ExpenseList = ({
   onPageChange,
   onUpdateExpense,
   onDeleteExpense
-}) => {
-  const [editingId, setEditingId] = useState(null);
+}: ExpenseListProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleEdit = (expense) => {
+  const handleEdit = (expense: Expense) => {
     setEditingId(expense.id);
   };
 
-  const handleUpdate = async (id, data) => {
+  const handleUpdate = async (id: string, data: ExpenseInput) => {
     const result = await onUpdateExpense(id, data);
     if (result.success) {
       setEditingId(null);
     }
+    return result;
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       await onDeleteExpense(id);
     }
@@ -140,7 +155,7 @@ const ExpenseList = ({
         }}>
           <p style={{ fontSize: '18px' }}>No expenses found</p>
           <p style={{ fontSize: '14px' }}>
-            {Object.keys(filters).some(key => filters[key]) 
+            {(filters.category_id || filters.start_date || filters.end_date)
               ? 'Try adjusting your filters' 
               : 'Add your first expense using the form above'}
           </p>

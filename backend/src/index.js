@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import expenseRoutes from './routes/expenses.js';
 import categoryRoutes from './routes/categories.js';
+import Expense from './models/Expense.js';
+import Category from './models/Category.js';
 
 dotenv.config();
 

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SummaryCard from './SummaryCard';
 import LoadingSpinner from './LoadingSpinner';
 import { formatCurrency } from '../utils/formatters';
 import { useSummary } from '../hooks/useSummary';
+import type { ChangeEvent } from 'react';
 
 const SummaryView = () => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -17,13 +18,13 @@ const SummaryView = () => {
     getCategoriesOverBudget
   } = useSummary({ month, year });
 
-  const handleMonthChange = (e) => {
+  const handleMonthChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const newMonth = parseInt(e.target.value);
     setMonth(newMonth);
     updateParams({ month: newMonth, year });
   };
 
-  const handleYearChange = (e) => {
+  const handleYearChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const newYear = parseInt(e.target.value);
     setYear(newYear);
     updateParams({ month, year: newYear });
@@ -32,7 +33,7 @@ const SummaryView = () => {
   const totalSpent = getTotalSpent();
   const overBudgetCategories = getCategoriesOverBudget();
 
-  const getMonthName = (m) => {
+  const getMonthName = (m: number) => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'];
     return months[m - 1];

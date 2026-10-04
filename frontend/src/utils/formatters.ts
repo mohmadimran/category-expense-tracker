@@ -1,4 +1,4 @@
-export const formatCurrency = (amount) => {
+export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -6,7 +6,7 @@ export const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-export const formatDate = (dateString) => {
+export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
@@ -15,7 +15,7 @@ export const formatDate = (dateString) => {
   }).format(date);
 };
 
-export const formatDateInput = (dateString) => {
+export const formatDateInput = (dateString: Date | string | null | undefined): string => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toISOString().split('T')[0];

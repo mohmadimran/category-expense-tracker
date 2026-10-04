@@ -1,7 +1,15 @@
-import React from 'react';
 import CategoryForm from './CategoryForm';
 import CategoryList from './CategoryList';
 import LoadingSpinner from './LoadingSpinner';
+import type { ApiActionResult, Category, CategoryInput } from '../types';
+
+interface CategoryManagerProps {
+  categories: Category[];
+  loading: boolean;
+  error: string | null;
+  onAddCategory: (data: CategoryInput) => Promise<ApiActionResult>;
+  onDeleteCategory: (id: string) => Promise<ApiActionResult>;
+}
 
 const CategoryManager = ({ 
   categories, 
@@ -9,8 +17,8 @@ const CategoryManager = ({
   error, 
   onAddCategory, 
   onDeleteCategory 
-}) => {
-  const handleDelete = async (id, name) => {
+}: CategoryManagerProps) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(
       `Delete category "${name}"?\n\nAll expenses in this category will also be deleted.`
     )) {

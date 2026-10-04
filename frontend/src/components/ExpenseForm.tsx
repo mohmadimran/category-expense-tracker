@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { validateExpense } from '../utils/validators';
 import { formatDateInput } from '../utils/formatters';
+import type { ChangeEvent, FormEvent } from 'react';
+import type { Category, ExpenseInput, ApiActionResult, ValidationErrors } from '../types';
 
-const ExpenseForm = ({ categories, onAddExpense }) => {
+interface ExpenseFormProps {
+  categories: Category[];
+  onAddExpense: (data: ExpenseInput) => Promise<ApiActionResult>;
+}
+
+const ExpenseForm = ({ categories, onAddExpense }: ExpenseFormProps) => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
     category_id: '',
     date: formatDateInput(new Date())
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -21,7 +28,7 @@ const ExpenseForm = ({ categories, onAddExpense }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
     setSuccess('');
@@ -54,9 +61,9 @@ const ExpenseForm = ({ categories, onAddExpense }) => {
         });
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setErrors({ submit: result.error });
+        setErrors({ submit: result.error || 'Failed to add expense' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'Failed to add expense' });
     } finally {
       setIsSubmitting(false);

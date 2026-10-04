@@ -1,6 +1,9 @@
 import axios from 'axios';
+import type { Category, CategoryInput, Expense, ExpenseFilters, ExpenseInput, Pagination, SummaryCategory } from '../types';
 
-const API_BASE = 'https://category-expense-tracker.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (
+  import.meta.env.DEV ? '/api' : 'https://category-expense-tracker.onrender.com/api'
+);
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -13,7 +16,7 @@ const apiClient = axios.create({
 // Request interceptor for logging
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`📤 ${config.method.toUpperCase()} ${config.url}`);
+    console.log(`📤 ${(config.method || 'get').toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -45,36 +48,33 @@ apiClient.interceptors.response.use(
 
 const api = {
   // Expenses
-  getExpenses: (params = {}) => {
+  getExpenses: (params: ExpenseFilters) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
+        queryParams.append(key, String(value));
       }
     });
     const queryString = queryParams.toString();
-    return apiClient.get(`/expenses${queryString ? `?${queryString}` : ''}`);
+    return apiClient.get<{ data: Expense[]; pagination: Pagination }>(`/expenses${queryString ? `?${queryString}` : ''}`);
   },
   
-  createExpense: (data) => apiClient.post('/expenses', data),
-  updateExpense: (id, data) => apiClient.put(`/expenses/${id}`, data),
-  deleteExpense: (id) => apiClient.delete(`/expenses/${id}`),
+  createExpense: (data: ExpenseInput) => apiClient.post('/expenses', data),
+  updateExpense: (id: string, data: ExpenseInput) => apiClient.put(`/expenses/${id}`, data),
+  deleteExpense: (id: string) => apiClient.delete(`/expenses/${id}`),
   
   // Categories
-  getCategories: () => apiClient.get('/categories'),
-  createCategory: (data) => apiClient.post('/categories', data),
-  deleteCategory: (id) => apiClient.delete(`/categories/${id}`),
+  getCategories: () => apiClient.get<Category[]>('/categories'),
+  createCategory: (data: CategoryInput) => apiClient.post('/categories', data),
+  deleteCategory: (id: string) => apiClient.delete(`/categories/${id}`),
   
   // Summary
-  getSummary: (params = {}) => {
+  getSummary: (params: { month: number; year: number }) => {
     const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
+    queryParams.set('month', String(params.month));
+    queryParams.set('year', String(params.year));
     const queryString = queryParams.toString();
-    return apiClient.get(`/summary${queryString ? `?${queryString}` : ''}`);
+    return apiClient.get<SummaryCategory[]>(`/summary${queryString ? `?${queryString}` : ''}`);
   },
 };
 
