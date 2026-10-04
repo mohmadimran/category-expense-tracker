@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import axios from 'axios';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import CategoryManager from './components/CategoryManager';
@@ -224,25 +225,53 @@ function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
   useEffect(() => {
-    api.getSession().then(({ data }) => { setUser(data.user); setCsrfToken(data.csrfToken); })
-      .catch(() => setCsrfToken(null)).finally(() => setChecking(false));
+    const handleExpiredSession = () => { setCsrfToken(null); setUser(null); };
+    window.addEventListener('auth:session-expired', handleExpiredSession);
+    return () => window.removeEventListener('auth:session-expired', handleExpiredSession);
+  }, []);
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const { data } = await api.getSession();
+        setUser(data.user); setCsrfToken(data.csrfToken);
+      } catch {
+        try {
+          const { data } = await api.refresh();
+          setUser(data.user); setCsrfToken(data.csrfToken);
+        } catch { setCsrfToken(null); }
+      } finally { setChecking(false); }
+    };
+    void restoreSession();
   }, []);
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('');
-    try { const { data } = await api.login(email, password); setUser(data.user); setCsrfToken(data.csrfToken); setPassword(''); }
-    catch { setError('Email or password is incorrect.'); }
+    try {
+      const { data } = isRegistering
+        ? await api.register(name, email, password)
+        : await api.login(email, password);
+      setUser(data.user); setCsrfToken(data.csrfToken); setPassword('');
+    } catch (requestError) {
+      const status = axios.isAxiosError(requestError) ? requestError.response?.status : undefined;
+      setError(isRegistering
+        ? status === 409 ? 'An account with this email already exists.' : status === 429 ? 'Too many registration attempts. Try again later.' : 'Could not create account. Use a valid email and a password of at least 12 characters.'
+        : status === 429 ? 'Too many sign-in attempts. Try again later.' : 'Email or password is incorrect.');
+    }
   };
   const logout = async () => { try { await api.logout(); } finally { setCsrfToken(null); setUser(null); } };
   if (checking) return <main className="auth-screen"><p>Checking session…</p></main>;
   if (!user) return <main className="auth-screen"><form className="login-card" onSubmit={submit}>
-    <h1>Team Expense Tracker</h1><p>Sign in to manage team expenses.</p>
+    <h1>Team Expense Tracker</h1><p>{isRegistering ? 'Create an account to start tracking your expenses.' : 'Sign in to manage team expenses.'}</p>
     {error && <p role="alert">{error}</p>}
+    {isRegistering && <label>Name<input autoComplete="name" maxLength={100} required value={name} onChange={e => setName(e.target.value)} /></label>}
     <label>Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} /></label>
-    <label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
-    <button type="submit">Sign in</button>
+    <label>Password<input type="password" autoComplete={isRegistering ? 'new-password' : 'current-password'} minLength={isRegistering ? 12 : undefined} maxLength={72} required value={password} onChange={e => setPassword(e.target.value)} />{isRegistering && <small>Use 12–72 UTF-8 bytes.</small>}</label>
+    <button type="submit">{isRegistering ? 'Create account' : 'Sign in'}</button>
+    <button type="button" className="auth-toggle" onClick={() => { setIsRegistering(!isRegistering); setError(''); }}>{isRegistering ? 'Already have an account? Sign in' : 'New here? Create an account'}</button>
   </form></main>;
   return <Dashboard user={user} onLogout={() => void logout()} />;
 }
